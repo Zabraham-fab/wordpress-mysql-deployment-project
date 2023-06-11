@@ -1,8 +1,8 @@
 # Installing 5 Node Cluster in Kubernetes and Deploying Wordpress Application with MySQL database connected
 
-<img src="171921">
+<img src="171921.png">
 
-<img src="172038">
+<img src="172038.png">
 
 Hello... This repository is about a portfolio project that demonstrates the installation of a 5-node Kubernetes cluster and the deployment of a WordPress application in Kubernetes. I have personally performed this project by doing a hands-on exercise in a local environment, and I'm sharing it with you.
 Step 1: Installation of a 5-Node Kubernetes Cluster
@@ -25,7 +25,7 @@ Step 6: Deployment of the WordPress Application
 - To demonstrate the functionality of the distributed WordPress application, I performed port forwarding. Using the command 'kubectl port-forward deployment/wordpress-deployment –n test 8080:80', I redirected traffic from the local machine's browser to access and view the application running in both the test and production environments by visiting 'localhost:8080'.
 This project helped me enhance my skills in working with Kubernetes and container technologies. Covering topics such as cluster management, namespace usage, role and permission assignments, ingress control, and application deployment, this project presents an applicable approach in real-world scenarios.
 
-<img src="171818" >
+<img src="171818.png" >
 
 Used commands:
 
@@ -55,6 +55,6 @@ $ kubectl port-forward deployment/wordpress-deployment -n test 8080:80
 
 $ kubectl apply -f ingress-test-prod.yml
 
-<img src="171827">
+<img src="171827.png">
 
-<img src="184748">
+<img src="184748.png">
