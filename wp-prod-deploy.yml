@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-production-pvc
+  namespace: production
+  labels:
+    tier: production
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  namespace: production
+  labels:
+    tier: production
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      tier: production
+      app: wordpress
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        tier: production
+        app: wordpress
+    spec:
+      containers:
+      - name: wp-production
+        image: wordpress:5.6
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql-service
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_DATABASE
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_USER
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_PASSWORD
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "250m"
+        ports:
+        - containerPort: 80
+          name: wp-prod-port
+        volumeMounts:
+        - name: wordpress-production-pv
+          mountPath: /var/www/html
+      volumes:
+        - name: wordpress-production-pv
+          persistentVolumeClaim:
+            claimName: wordpress-production-pvc
+      nodeSelector:
+        tier: production
+      tolerations:
+      - key: "tier"
+        operator: "Equal"
+        value: "production"
+        effect: "NoSchedule"
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mysql
+              topologyKey: kubernetes.io/hostname      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-service
+  namespace: production
+  labels:
+    tier: production
+    app: wordpress
+spec:
+  selector:
+    app: wordpress
+    tier: production
+  ports:
+  - port: 80
+    targetPort: 80

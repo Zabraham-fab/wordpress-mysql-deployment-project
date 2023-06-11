@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-production-pvc
+  namespace: production
+  labels:
+    tier: production
+    app: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: production
+  labels:
+    tier: production
+    app: mysql
+spec:
+  selector:
+    matchLabels:
+      tier: production
+      app: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        tier: production
+        app: mysql
+    spec:
+      containers:
+      - name: mysql-production
+        image: mysql:5.6
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-production-secret
+              key: MYSQL_PASSWORD
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "250m"
+        ports:
+        - containerPort: 3306
+          name: mysql-prod-port
+        volumeMounts:
+        - name: mysql-production-pv
+          mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-production-pv
+          persistentVolumeClaim:
+            claimName: mysql-production-pvc
+      nodeSelector:
+        tier: production
+      tolerations:
+      - key: "tier"
+        operator: "Equal"
+        value: "production"
+        effect: "NoSchedule"
+      nodeSelector:
+        tier: production
+      tolerations:
+      - key: "tier"
+        operator: "Equal"
+        value: "production"
+        effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: production
+  labels:
+    tier: production
+    app: mysql
+spec:
+  selector:
+    tier: production
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306

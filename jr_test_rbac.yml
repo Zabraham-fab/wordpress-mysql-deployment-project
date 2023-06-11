@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: test
+  name: manage-jr
+rules:
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: manage-jr-b
+  namespace: test
+subjects:
+- kind: Group
+  name: jr
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: manage-jr
+  apiGroup: rbac.authorization.k8s.io
